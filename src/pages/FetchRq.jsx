@@ -1,11 +1,18 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { fetchPosts, fetchPostsPagination } from "../api/api";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { deletePost, fetchPosts, fetchPostsPagination } from "../api/api";
 import { useState } from "react";
 import { NavLink } from "react-router";
 
 const FetchRQ = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [pageNumber, setPageNumber] = useState(0);
+
+  const queryClient = useQueryClient();
 
   //with the query
   // const { data, isError, isPending, error } = useQuery({
@@ -26,6 +33,15 @@ const FetchRQ = () => {
     // refetchInterval: 1000,
     // refetchIntervalInBackground: true,
     placeholderData: keepPreviousData,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deletePost(id),
+    onSuccess: (data, id) => {
+      queryClient.setQueryData(["posts", pageNumber], (currEle) => {
+        return currEle?.filter((post) => post.id !== id);
+      });
+    },
   });
 
   const toggleAccordion = (id) => {
@@ -81,6 +97,16 @@ mutationKey: A unique key to identify the mutation in the cache.
 
 */
 
+  /*
+Mutate()
+The mutate() function is used to execute the mutation in React Query.
+The process is the same whether you're:
+Deleting data
+Updating data
+Creating new data
+When you call.mutate(), it tells React Query to run the mutation function defined inside the use Mutation hook. This is needed because the mutation is an action that changes data, unlike queries, which are used to fetch data and are often auto-executed.
+*/
+
   return (
     <div className="w-full max-w-4xl mx-auto my-12 bg-gray-50 border border-gray-200 rounded-2xl p-8 shadow-sm font-sans">
       <h1 className="flex items-center justify-center text-4xl font-bold mb-5">
@@ -99,9 +125,13 @@ mutationKey: A unique key to identify the mutation in the cache.
                   onClick={() => toggleAccordion(curr.id)}
                   className="w-full px-6 py-5 flex justify-between items-center text-left"
                 >
+                  <span className="text-xl font-medium text-gray-800 mr-1">
+                    {curr.id}
+                  </span>
                   <span className="text-xl font-medium text-gray-800">
                     {curr.title}
                   </span>
+
                   <span className="text-gray-600 transition-transform duration-300">
                     {isExpanded ? (
                       <svg
@@ -142,6 +172,11 @@ mutationKey: A unique key to identify the mutation in the cache.
                   </div>
                 )}
               </NavLink>
+              <div className="bg-zinc-600 px-5 py-2 shadow-2xl text-white font-bold cursor-pointer">
+                <button onClick={() => deleteMutation.mutate(curr.id)}>
+                  Delete
+                </button>
+              </div>
             </li>
           );
         })}

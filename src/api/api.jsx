@@ -29,3 +29,11 @@ export const fetchPostsPagination = async (page) => {
   return res.status === 200 ? res.data : [];
 };
 
+
+export const deletePost = async (id)  =>{
+  try {
+    return await api.delete(`posts/${id}`);
+  } catch (error) {
+    console.log(error)
+  }
+}
