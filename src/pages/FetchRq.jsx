@@ -1,12 +1,23 @@
+/*
+  ALGORITHM & CONCEPTS: React Query (TanStack Query)
+  1. Import `useQuery` and `useMutation` from `@tanstack/react-query`.
+  2. Querying: Call `useQuery` passing a unique `queryKey` and the `queryFn` (API call). 
+     - React Query automatically handles `isPending`, `isError`, and `data` states.
+     - Data is cached based on `gcTime` and background-refetched based on `staleTime`.
+  3. Mutations: Call `useMutation` to handle Create/Update/Delete operations.
+     - On success, we can use `queryClient.setQueryData` to optimistically update the UI without waiting for a refetch.
+*/
+
 import {
   keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { deletePost, fetchPosts, fetchPostsPagination } from "../api/api";
+import { deletePost, fetchPosts, fetchPostsPagination, updatePost } from "../api/api";
 import { useState } from "react";
 import { NavLink } from "react-router";
+import { Tooltip } from "../components/UI/Tooltip";
 
 const FetchRQ = () => {
   const [expandedId, setExpandedId] = useState(null);
@@ -44,139 +55,112 @@ const FetchRQ = () => {
     },
   });
 
+
+const updateMutation =  useMutation(
+    {
+      mutationFn : (id) => updatePost(id),
+      onSuccess : (data,id) => {
+        queryClient.setQueryData(["posts", pageNumber],(postData)=>{
+          return postData?.map((post)=>{
+            return post.id === id ? {...post, title : data.data.title} : post;
+          })
+        });
+      }
+    }
+  );
+
+
   const toggleAccordion = (id) => {
     setExpandedId((prevId) => (prevId === id ? null : id));
   };
 
-  if (isPending) return <p>Loading...</p>;
-  if (isError) return <p> {error.message || "Something went wrong"} </p>;
-
-  /*
-  gcTime -(Garbage Collection Time)
-In React Query v5, the cache Time option in React Query has been renamed to gcTime.
-When you use React Query to get data, it saves the results in a local cache. This means if you ask for the same data again, React Query will give you the saved data instead of making another API request. The cache updates automatically if the data changes, so you always get the latest information.
-Use Case: Imagine you're fetching a list of users. If you go back to the same page, React Query will show the saved list from the cache instead of reloading it from the server, making your app faster. If a new user is added, React Query will automatical update the list.
-By default, inactive queries are garbage collected after 5 minutes. This means that i query is not being used for 5 minutes, the cache for that query will be cleaned up.
-  */
-
-  /* staleTime 
-staleTime
-In React Query, stale Time is a configuration option that determines how long fetched data is considered fresh before it needs to be refetched.
-Here's how it works:
-Fresh Data:
-When data is initially fetched or updated, it's considered fresh.
-Stale Data:
-After the stale Time duration (specified in milliseconds) elapses, the data is considered
-Default Value:
-The default staleTime is 0, meaning data becomes stale immediately after being fe This ensures data is always up-to-date but can lead to frequent refetching.
-
-*/
-
-  /*
-pooling
-Polling
-In React Query, polling refers to the technique of fetching data from an API at regular intervals to keep the Ul up-to-date with the latest information. This is especially useful for scenarios where data changes frequently and you want to display real-time updates without requiring the user to manually refresh the page.
-`refetchInterval option: The simplest way to enable polling is to pass the 'refetchInterval option to the 'useQuery hook. This option specifies the interval (in milliseconds) at which React Query should automatically refetch the data.
-// When you want to fetch the data even in background or you are in another tab.
-refetchintervalin Background option: If you want to continue polling even when the component is not mounted, you can use the 'refetchintervalin Background option.
-*/
-
-  /*
-useMutation
-The use Mutation hook is part of React Query and is used for operations that modify data, like Create, Update, and Delete (CRUD operations).
-Syntax:
-const mutation = useMutation( mutationFn, {
-// Optional configuration options
-});
-We can provide various configuration options to customize the behavior of the mutation, such as:
-onSuccess: A callback function that runs when the mutation is successful.
-onError
-: A callback function that runs if the mutation fails.
-onSettled: A callback function that runs regardless of success or failure.
-mutationKey: A unique key to identify the mutation in the cache.
-
-*/
-
-  /*
-Mutate()
-The mutate() function is used to execute the mutation in React Query.
-The process is the same whether you're:
-Deleting data
-Updating data
-Creating new data
-When you call.mutate(), it tells React Query to run the mutation function defined inside the use Mutation hook. This is needed because the mutation is an action that changes data, unlike queries, which are used to fetch data and are often auto-executed.
-*/
+  if (isPending) return <p className="text-center my-12 text-gray-600">Loading...</p>;
+  if (isError) return <p className="text-center my-12 text-red-500"> {error.message || "Something went wrong"} </p>;
 
   return (
     <div className="w-full max-w-4xl mx-auto my-12 bg-gray-50 border border-gray-200 rounded-2xl p-8 shadow-sm font-sans">
-      <h1 className="flex items-center justify-center text-4xl font-bold mb-5">
-        REACT QUERY
-      </h1>
+      <div className="flex items-center justify-center gap-3 mb-5">
+        <h1 className="text-4xl font-bold">
+          REACT QUERY
+        </h1>
+        <Tooltip position="bottom" content={
+          <div className="space-y-2 text-left min-w-[280px]">
+            <p><strong>gcTime:</strong> How long inactive queries stay in memory before being garbage collected (default 5 mins).</p>
+            <p><strong>staleTime:</strong> How long data is considered fresh before a background refetch is triggered (default 0).</p>
+            <p><strong>Polling:</strong> Using `refetchInterval` to automatically fetch data at intervals.</p>
+          </div>
+        }>
+          <span className="text-gray-400 hover:text-blue-500 cursor-help transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </span>
+        </Tooltip>
+      </div>
+
       <ul className="space-y-4">
         {data?.map((curr) => {
           const isExpanded = expandedId === curr.id;
           return (
             <li
               key={curr.id}
-              className="bg-[#e5e7eb] rounded-xl overflow-hidden shadow-sm text-gray-900"
+              className="bg-[#e5e7eb] rounded-xl shadow-sm text-gray-900 flex flex-col transition-all duration-300 hover:shadow-md relative"
             >
-              <NavLink to={`/rq/${curr.id}`}>
-                <button
-                  onClick={() => toggleAccordion(curr.id)}
-                  className="w-full px-6 py-5 flex justify-between items-center text-left"
+              <div className="w-full px-6 py-4 flex flex-col md:flex-row justify-between items-center text-left gap-4">
+                {/* Left Side: ID and Title (Click to navigate) */}
+                <NavLink 
+                  to={`/rq/${curr.id}`} 
+                  className="flex-1 group"
                 >
-                  <span className="text-xl font-medium text-gray-800 mr-1">
-                    {curr.id}
+                  <span className="text-xl font-bold text-gray-400 mr-3 group-hover:text-blue-500 transition-colors">
+                    #{curr.id}
                   </span>
-                  <span className="text-xl font-medium text-gray-800">
+                  <span className="text-xl font-medium text-gray-800 group-hover:text-blue-600 transition-colors">
                     {curr.title}
                   </span>
+                </NavLink>
 
-                  <span className="text-gray-600 transition-transform duration-300">
+                {/* Right Side: Actions and Toggle */}
+                <div className="flex items-center gap-3 shrink-0">
+                  <Tooltip content="useMutation: Modifies data (CRUD). Cache is manually updated via setQueryData onSuccess." position="top">
+                    <button 
+                      onClick={() => updateMutation.mutate(curr.id)}
+                      className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors text-sm font-semibold shadow-sm"
+                    >
+                      Update
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="mutate(): Executes the mutation. Automatically triggers onSuccess or onError handlers." position="top">
+                    <button 
+                      onClick={() => deleteMutation.mutate(curr.id)}
+                      className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold shadow-sm"
+                    >
+                      Delete
+                    </button>
+                  </Tooltip>
+                  <button
+                    onClick={() => toggleAccordion(curr.id)}
+                    className="p-2 ml-2 text-gray-600 hover:bg-gray-300 rounded-full transition-colors"
+                  >
                     {isExpanded ? (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M5 15l7-7 7 7"
-                        />
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
                       </svg>
                     ) : (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M19 9l-7 7-7-7"
-                        />
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                       </svg>
                     )}
-                  </span>
-                </button>
-                {isExpanded && (
-                  <div className="px-6 py-5 border-t border-gray-300 text-gray-800 bg-[#e5e7eb]">
-                    <p className="text-lg leading-relaxed">{curr.body}</p>
-                  </div>
-                )}
-              </NavLink>
-              <div className="bg-zinc-600 px-5 py-2 shadow-2xl text-white font-bold cursor-pointer">
-                <button onClick={() => deleteMutation.mutate(curr.id)}>
-                  Delete
-                </button>
+                  </button>
+                </div>
               </div>
+
+              {/* Accordion Content */}
+              {isExpanded && (
+                <div className="px-6 py-5 border-t border-gray-300 text-gray-800 bg-[#e5e7eb] rounded-b-xl">
+                  <p className="text-lg leading-relaxed">{curr.body}</p>
+                </div>
+              )}
             </li>
           );
         })}

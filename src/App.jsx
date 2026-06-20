@@ -6,6 +6,8 @@ import FetchRq from "./pages/FetchRq";
 import { QueryClientProvider ,QueryClient} from "@tanstack/react-query";
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { FetchIndv } from "./components/UI/FetchIndv";
+import FetchInfinite from "./pages/FetchInfinite";
+import FetchInfiniteObserver from "./pages/FetchInfiniteObserver";
 
 
 const router = createBrowserRouter([
@@ -17,7 +19,8 @@ const router = createBrowserRouter([
       { path: "/trad", element: <FetchOld /> },
       { path: "/rq", element: <FetchRq /> },
       { path: "/rq/:id", element: <FetchIndv /> },
-
+      { path: "/infinite", element: <FetchInfinite /> },
+      { path: "/infinite-observer", element: <FetchInfiniteObserver /> },
     ],
   },
 ]);

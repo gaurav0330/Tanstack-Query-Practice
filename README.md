@@ -1,16 +1,48 @@
-# React + Vite
+# TanStack Query (React Query) Practice Project 🚀
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Hey there! 👋 I built this project to deeply understand how data fetching works in modern React applications. I wanted to move away from the traditional `useEffect` + `useState` approach and really get my hands dirty with **TanStack Query (v5)**. 
 
-Currently, two official plugins are available:
+This repo serves as my personal playground and demonstration of why React Query is the industry standard for server-state management.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## What's inside?
 
-## React Compiler
+I built a few different pages to compare approaches and test out features:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Traditional Fetching**: I started by building a basic data fetch using `useEffect` and `useState` just to remind myself of the boilerplate and edge cases (loading states, error handling, lack of caching).
+- **React Query Basics**: I rewrote the same fetch using `useQuery`. It instantly simplified the code and gave me out-of-the-box caching!
+- **Mutations (CRUD)**: I implemented `useMutation` to handle Deleting and Updating posts. I also used `queryClient.setQueryData` to instantly update the UI without needing to wait for a network refresh.
+- **Pagination**: Added a paginated view that utilizes `keepPreviousData` so the UI doesn't awkwardly flash a loading spinner when clicking 'Next' or 'Prev'.
+- **Infinite Scrolling**: My favorite part! I implemented `useInfiniteQuery` and hooked it up to a custom scroll listener. It seamlessly fetches the next page of data as soon as you hit the bottom of the screen.
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- React 18
+- TanStack Query (v5)
+- Tailwind CSS (for quick, clean styling)
+- Axios
+
+## My Biggest Takeaways
+
+Building this really solidified a few concepts for me:
+- **`staleTime` vs `gcTime`**: Figuring out exactly how long data should stay fresh before refetching in the background, vs how long it should stay in memory after a component unmounts.
+- **Query Invalidation**: How powerful it is to just tell React Query "Hey, the posts are outdated" and let it handle the refetching.
+- **Infinite Queries**: Managing `pageParam` and `data.pages` was a bit tricky at first, but it completely abstracts away the headache of manually appending arrays.
+
+## 📖 Glossary / Key Concepts from my Notes
+
+Here are some exact notes I took while learning and implementing this project:
+
+- **gcTime (Garbage Collection Time):** Previously known as `cacheTime` in v4. By default, inactive queries are garbage collected after 5 minutes. If a query is not being used for 5 minutes, its cache is cleaned up to save memory.
+- **staleTime:** Determines how long fetched data is considered "fresh" before it needs to be refetched in the background. The default is `0`, meaning data becomes stale immediately after being fetched, ensuring you always get the most up-to-date info at the cost of frequent background fetching.
+- **Polling (`refetchInterval`):** A technique to fetch data from an API at regular intervals to keep the UI completely synced with the server automatically.
+- **useMutation:** The hook used for CRUD operations (Create, Update, Delete) that modify data on the server.
+- **mutate():** The execution trigger for a mutation function. Unlike queries which fetch automatically, mutations must be explicitly executed!
+
+## Running it locally
+
+If you want to clone this and play around with the cache yourself:
+
+```bash
+npm install
+npm run dev
+```

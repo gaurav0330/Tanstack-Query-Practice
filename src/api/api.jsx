@@ -37,3 +37,25 @@ export const deletePost = async (id)  =>{
     console.log(error)
   }
 }
+
+
+export const updatePost = async (id)  =>{
+  try {
+    return await api.patch(`posts/${id}`,{
+      title : "i Have updated title"
+    });
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+//infinte scrolling
+export const fetchUsers =  async ({pageParam = 1}) =>{
+  try {
+    const res = await axios.get(`https://jsonplaceholder.typicode.com/posts?_page=${pageParam}&_limit=${10}`);
+    return res.status === 200 ? res.data  : [] ;
+
+  } catch (error) {
+    console.log(error)
+  }
+}

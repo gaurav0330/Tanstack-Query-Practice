@@ -11,6 +11,8 @@ const Header = () => {
           <li><NavLink to="/" className={({ isActive }) => isActive ? "text-blue-400 font-semibold" : "text-zinc-300 hover:text-white transition-colors"}>Home</NavLink></li>
           <li><NavLink to="/trad" className={({ isActive }) => isActive ? "text-blue-400 font-semibold" : "text-zinc-300 hover:text-white transition-colors"}>FetchOld</NavLink></li>
           <li><NavLink to="/rq" className={({ isActive }) => isActive ? "text-blue-400 font-semibold" : "text-zinc-300 hover:text-white transition-colors"}>FetchRq</NavLink></li>
+          <li><NavLink to="/infinite" className={({ isActive }) => isActive ? "text-blue-400 font-semibold" : "text-zinc-300 hover:text-white transition-colors"}>Infinite Scroll</NavLink></li>
+          <li><NavLink to="/infinite-observer" className={({ isActive }) => isActive ? "text-blue-400 font-semibold" : "text-zinc-300 hover:text-white transition-colors"}>Infinite (Observer)</NavLink></li>
         </ul>
       </nav>
     </header>
